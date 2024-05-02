@@ -1,10 +1,14 @@
 namespace game
 {
-    public class Item(string name, string description, string type, bool isEdible)
+    public class Item(string name, string description)
     {
         public string Name { get; set; } = name;
         public string Description { get; set; } = description;
-        public string Type { get; set; } = type;
-        public bool IsEdible { get; set; } = isEdible;
+
+        public void ShowDetails()
+        {
+            Console.WriteLine($"Name: {Name}\nDesctiption: {Description}\n");
+        }
     }
+
 }
