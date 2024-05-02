@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace game
 {
     public class Player(Room startRoom)
@@ -11,7 +13,7 @@ namespace game
 
         public static string ShowOptions()
         {
-            Console.WriteLine("\nChoose what to do: \nSearch, Move, Fight, Eat, Status");
+            Console.Write("\nWhat shall you do? (Search, Move, Fight, Eat, Status, Items): ");
             string? playerChoice = Console.ReadLine();
             return playerChoice ?? "";
     
@@ -30,20 +32,54 @@ namespace game
         {
             Items.Remove(item);
             if (item is Weapon) HasWeapon = false;
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\n{item.Name} removed from inventory.");
+            Console.ResetColor();
         }
 
-        public void ShowItems()
+        public bool ShowItems()
         {
-            Console.WriteLine("Items:\n---------------");
+            Console.WriteLine();
+            if (Items.Count > 0)
+            {
+                foreach (Item item in Items)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.WriteLine($"{item.Name}  -  {item.Description}");
+                    Console.ResetColor();
+                }
+                return true;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Inventory is currently empty.");
+                Console.ResetColor();
+                return false;
+            }
+        }
+
+        public bool ShowEdibles()
+        {
+            int count = 0;
+            Console.WriteLine();
             foreach (Item item in Items)
             {
-                Console.WriteLine(item.Name);
+                if (item is Food foodItem)
+                {
+                    count++;
+                    Console.WriteLine($"{foodItem.Name}  -  {foodItem.Description}  -  {foodItem.HealthPoints}");
+                }
             }
-            Console.WriteLine("---------------\n");
+            return count > 0;
         }
 
-        public void EatItem(Food item)
+        public void Eat(Food item)
         {
+                Items.Remove(item);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n{item.HealthPoints} added to Health.");
+                Console.ResetColor();
                 Health += item.Eat();
                 if (Health > 100) Health = 100;
         }
@@ -74,13 +110,20 @@ namespace game
         public void Attack(Monster monster)
         {
             monster.Health -= Damage;
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\n{Damage} damage done to {CurrentRoom?.Monster?.Name}!");
+            Console.ResetColor();
             if (monster.Health <= 0)
             {
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"\n{monster.Name} defeated!");
+                Console.ResetColor();
             }
             else
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"\n{monster.Name} attacked back! {monster.Damage} damage taken!");
+                Console.ResetColor();
                 Health -= monster.Damage;
             }
         }
