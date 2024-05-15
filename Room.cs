@@ -40,7 +40,7 @@ namespace game
             else
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("This room is currently empty");
+                Console.WriteLine("\nThis room is currently empty");
                 Console.ResetColor();
                 return false;
             }
@@ -49,6 +49,11 @@ namespace game
         public void TakeItem(Item item)
         {
             Items.Remove(item);
+        }
+
+        public void AddItem(Item item)
+        {
+            Items.Add(item);
         }
     }
 }

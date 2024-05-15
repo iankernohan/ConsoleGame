@@ -52,10 +52,14 @@ center.North = north;
 Player player = new(start);
 string currentStatement = "";
 
-Console.WriteLine(@"
-Welcome to the underground dungeons of Marikoz. A very important gem has been stolen by an infamous group of monsters,
+Console.WriteLine("\n---------------------------------------------------------------------------------------------------------------------");
+Console.ForegroundColor = ConsoleColor.Green;
+Console.WriteLine(
+@"Welcome to the underground dungeons of Marikoz. A very important gem has been stolen by an infamous group of monsters,
 and we need your help to get it back! The monsters a messy creatures and leave food and weapons lying around,
 feel free to use whatever you can find. Defeat the monsters and reclaim the jewel!");
+Console.ResetColor();
+Console.WriteLine("---------------------------------------------------------------------------------------------------------------------");
 
 while (true)
 {
@@ -66,6 +70,7 @@ while (true)
             break;
 
         case "move":
+        case "m":
             if (player.CurrentRoom.Monster == null)
             {
                 Console.WriteLine("\nWhich direction?");
@@ -86,14 +91,13 @@ while (true)
             break;
 
         case "status":
-            Console.ForegroundColor= ConsoleColor.DarkGray;
-            Console.WriteLine($"\nCurrent Room: {player.CurrentRoom.Name}\nHealth: {player.Health}");
-            if (player.CurrentRoom.Monster != null) Console.WriteLine($"Moster: {player.CurrentRoom.Monster.Name} - {player.CurrentRoom.Monster.Health} Health");
-            Console.ResetColor();
+        case "st":
+            player.ShowStatus();
             currentStatement = "";
             break;
 
         case "search":
+        case "s":
             Console.WriteLine();
             if (player.CurrentRoom.ShowItems())
             {
@@ -106,32 +110,29 @@ while (true)
             break;
 
         case "searching":
-            Console.WriteLine("\nSelect an item by name to pick it up or type 'b' to go back.");
+            Console.WriteLine("\nSelect an item by name to pick it up. Type 'a' to take all or type 'b' to go back.");
             string? response = Console.ReadLine();
             if (response == "b")
             {
                 currentStatement = "";
             }
+            else if (response?.ToLower() == "a" || response?.ToLower() == "all")
+            {
+                player.PickUpAllItems();
+                currentStatement = "";
+            }
             else
             {
-                Item? item = player.CurrentRoom.Items.Find(item => item.Name.ToLower() == response?.ToLower());
-                if (item != null) 
+                bool didPickUp = player.PickUpItem(response ?? "");
+                if (didPickUp)
                 {
-                    player.PickUpItem(item);
-                    player.CurrentRoom.TakeItem(item);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"\n{item.Name} added to Inventory!\n");
-                    Console.ResetColor();
                     currentStatement = "search";
-                }
-                else
-                {
-                    Console.WriteLine("Item not in room.");
                 }
             }
             break;
 
         case "fight":
+        case "f":
             if (player.CurrentRoom.Monster != null)
             {
                 player.Attack(player.CurrentRoom.Monster);
@@ -139,12 +140,15 @@ while (true)
             }
             else
             {
-                Console.WriteLine("There are no monsters to fight in this room.");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\nThere are no monsters to fight in this room.");
+                Console.ResetColor();
                 currentStatement = "";
             }
             break;
 
          case "items":
+         case "i":
             if (player.ShowItems())
             {
                 currentStatement = "inventory";
@@ -156,7 +160,7 @@ while (true)
             break;  
         
         case "inventory":
-            Console.WriteLine("\nSelect an item to DROP or type 'b' to go back.");
+            Console.WriteLine("\nType an items name to DROP item or 'b' to go back.");
             string? itemResponse = Console.ReadLine();
             if (itemResponse == "b")
             {
@@ -164,22 +168,16 @@ while (true)
             }
             else
             {
-                Item? itemToDrop = player.Items.Find(item => item.Name.ToLower() == itemResponse?.ToLower());
-                if (itemToDrop != null)
+                bool didDrop = player.DropItem(itemResponse ?? "");
+                if (didDrop)
                 {
-                    player.DropItem(itemToDrop);
                     currentStatement = "items";
-                }
-                else
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"\n{itemResponse} is not i  your inventory.");
-                    Console.ResetColor();
                 }
             }
             break;
         
         case "eat":
+        case "e":
             if (player.ShowEdibles())
             {
                 Console.WriteLine("\nSelect an item to eat or type 'b' to go back.");
@@ -190,29 +188,18 @@ while (true)
                 }
                 else 
                 {
-                    Item? itemToEat = player.Items.Find(item => item.Name.ToLower() == eatResponse?.ToLower());
-                    if (itemToEat != null && itemToEat is Food foodItem)
-                    {
-                        player.Eat(foodItem);
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine($"\n{eatResponse} is not i  your inventory.");
-                        Console.ResetColor();
-                    }
+                    player.Eat(eatResponse ?? "");
                 }
-
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("There is nothing edible in you inventory.");
-                Console.ResetColor();
                 currentStatement = "";
             }
             break;
-
+        case "map":
+            Player.ShowMap();
+            currentStatement = "";
+            break;
         default:
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("\nInvalid input.");

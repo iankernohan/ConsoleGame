@@ -13,28 +13,125 @@ namespace game
 
         public static string ShowOptions()
         {
-            Console.Write("\nWhat shall you do? (Search, Move, Fight, Eat, Status, Items): ");
+            Console.Write("\nWhat shall you do? (Search[s], Move[m], Fight[f], Eat[e], Status[st], Items[i], Map[map]): ");
             string? playerChoice = Console.ReadLine();
             return playerChoice ?? "";
     
         }
-        public void PickUpItem(Item item)
+
+        public void ShowStatus()
         {
-            Items.Add(item);
-            if (item is Weapon weapon1)
+            Console.ForegroundColor= ConsoleColor.DarkGray;
+            Console.WriteLine($"\nCurrent Room: {CurrentRoom.Name}\nHealth: {Health}\nDamage: +{Damage}");
+            if (CurrentRoom.Monster != null) Console.WriteLine($"Moster: {CurrentRoom.Monster.Name} - {CurrentRoom.Monster.Health} Health");
+            Console.ResetColor();
+        }
+        public bool PickUpItem(string itemName)
+        {
+            Item? item = CurrentRoom.Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+            if (item != null) 
             {
-                HasWeapon = true;
-                Damage = weapon1.Damage;
+                if (item is Weapon weapon1)
+                {
+                    if (HasWeapon)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("\nYou already have a weapon, type 'y' if you would like to replace it.");
+                        Console.ResetColor();
+                        string? replace = Console.ReadLine();
+                        if (replace == "y")
+                        {
+                            Item? weaponItem = Items.Find(item => item is Weapon);
+                            DropItem(weaponItem);
+                            HasWeapon = true;
+                            Damage = weapon1.Damage;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        HasWeapon = true;
+                        Damage = weapon1.Damage;
+                    }
+                }
+                Items.Add(item);
+                CurrentRoom.TakeItem(item);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n{item.Name} added to Inventory!\n");
+                Console.ResetColor();
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("Item not in room.");
+                return false;
+            }
+
+        }
+
+        public void PickUpAllItems()
+        {
+            if (CurrentRoom.Items.Count > 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                List<Item> ItemsCopy = new(CurrentRoom.Items);
+                foreach (Item item in ItemsCopy)
+                {
+                    PickUpItem(item.Name);
+                }
+                Console.ResetColor();
+                CurrentRoom.Items = [];
+            }
+            else
+            {
+                Console.WriteLine("Room is currently empty");
             }
         }
 
-        public void DropItem(Item item)
+        public bool DropItem(string itemName)
         {
-            Items.Remove(item);
-            if (item is Weapon) HasWeapon = false;
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\n{item.Name} removed from inventory.");
-            Console.ResetColor();
+            Item? itemToDrop = Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+            if (itemToDrop != null)
+            {
+                Items.Remove(itemToDrop);
+                CurrentRoom.AddItem(itemToDrop);
+                if (itemToDrop is Weapon) HasWeapon = false;
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n{itemToDrop.Name} removed from inventory.");
+                Console.ResetColor();
+                return true;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"\n{itemName} is not i  your inventory.");
+                Console.ResetColor();
+                return false;
+            }
+        }
+
+        public bool DropItem(Item item)
+        {
+            if (Items.Contains(item))
+            {
+                Items.Remove(item);
+                CurrentRoom.AddItem(item);
+                if (item is Weapon) HasWeapon = false;
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n{item.Name} removed from inventory.");
+                Console.ResetColor();
+                return true;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"\n{item} is not i  your inventory.");
+                Console.ResetColor();
+                return false;
+            }
         }
 
         public bool ShowItems()
@@ -71,17 +168,36 @@ namespace game
                     Console.WriteLine($"{foodItem.Name}  -  {foodItem.Description}  -  {foodItem.HealthPoints}");
                 }
             }
-            return count > 0;
+            if (count <= 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("There is nothing edible in you inventory.");
+                Console.ResetColor();
+                return false;
+            }
+            return true;
         }
 
-        public void Eat(Food item)
+        public bool Eat(string itemName)
         {
-                Items.Remove(item);
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"\n{item.HealthPoints} added to Health.");
-                Console.ResetColor();
-                Health += item.Eat();
-                if (Health > 100) Health = 100;
+                Item? itemToEat = Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+                if (itemToEat != null && itemToEat is Food foodItem)
+                {
+                    Items.Remove(itemToEat);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"\n{foodItem.HealthPoints} added to Health.");
+                    Console.ResetColor();
+                    Health += foodItem.Eat();
+                    if (Health > 100) Health = 100;
+                    return true;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"\n{itemName} is not i your an edible item in your inventory.");
+                    Console.ResetColor();
+                    return false;
+                }
         }
 
         public string Move(string direction)
@@ -126,6 +242,36 @@ namespace game
                 Console.ResetColor();
                 Health -= monster.Damage;
             }
+        }
+
+        public static void ShowMap()
+        {
+            Console.WriteLine(
+@"
+   ----------  ---------- ----------
+   |  North | |         | |  North |
+   |        |=|  North  |=|        |
+   |  West  | |         | |  East  |
+   ----------  ---------- ----------
+       ||          ||         ||
+   ----------  ---------- ----------
+   |        | |         | |        |
+   |  West  | |  Center | |  East  |
+   |        | |         | |        |
+   ----------  ---------- ----------
+       ||                     ||
+   ----------  ---------- ----------
+   |  South | |         | |  South |
+   |        |=|  South  |=|        |
+   |  West  | |         | |  East  |
+   ----------  ---------- ----------
+                   ||
+               ----------      
+              |         |
+              |  Start  |
+              |         |
+               ----------"
+);
         }
     }
 }
