@@ -73,13 +73,7 @@ while (true)
         case "m":
             if (player.CurrentRoom.Monster == null)
             {
-                Console.WriteLine("\nWhich direction?");
-                player.CurrentRoom.ShowDoors();
-                string? direction = Console.ReadLine();
-                currentStatement = player.Move(direction ?? "");
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"\nMoved into {player.CurrentRoom.Name}.");
-                Console.ResetColor();
+                currentStatement = player.Move() ? "" : "move";
             }
             else
             {
@@ -99,14 +93,7 @@ while (true)
         case "search":
         case "s":
             Console.WriteLine();
-            if (player.CurrentRoom.ShowItems())
-            {
-                currentStatement = "searching";
-            }
-            else
-            {
-                currentStatement = "";
-            }
+            currentStatement = player.CurrentRoom.ShowItems() ? "searching" : "";
             break;
 
         case "searching":
@@ -123,11 +110,7 @@ while (true)
             }
             else
             {
-                bool didPickUp = player.PickUpItem(response ?? "");
-                if (didPickUp)
-                {
-                    currentStatement = "search";
-                }
+                currentStatement = player.PickUpItem(response ?? "") ? "search" : "searching";
             }
             break;
 
@@ -149,18 +132,11 @@ while (true)
 
          case "items":
          case "i":
-            if (player.ShowItems())
-            {
-                currentStatement = "inventory";
-            }
-            else 
-            {
-                currentStatement = "";
-            }
+            currentStatement = player.ShowItems() ? "inventory" : "";
             break;  
         
         case "inventory":
-            Console.WriteLine("\nType an items name to DROP item or 'b' to go back.");
+            Console.WriteLine("\nSelect an item to DROP or type 'b' to go back.");
             string? itemResponse = Console.ReadLine();
             if (itemResponse == "b")
             {
@@ -168,11 +144,7 @@ while (true)
             }
             else
             {
-                bool didDrop = player.DropItem(itemResponse ?? "");
-                if (didDrop)
-                {
-                    currentStatement = "items";
-                }
+                currentStatement = player.DropItem(itemResponse ?? "") ? "items" : "inventory";
             }
             break;
         
@@ -197,7 +169,7 @@ while (true)
             }
             break;
         case "map":
-            Player.ShowMap();
+            player.ShowMap();
             currentStatement = "";
             break;
         default:
@@ -210,7 +182,9 @@ while (true)
 
     if (player?.Health == 0)
     {
-        Console.WriteLine("You have been defeated. GAME OVER.");
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("\nYou have been defeated. GAME OVER.");
+        Console.ResetColor();
         break;
     }
 
@@ -219,11 +193,14 @@ while (true)
     if (player.Items.Any(item => item.Name == "Jewel"))
     {
         south.South = start;
+        center.South = south;
     }
 
     if (player.Items.Any(item => item.Name == "Jewel") && player.CurrentRoom.Name == "Starting Room")
     {
-        Console.WriteLine("YOU FOUND THE SACRED JEWEL! YOU WIN!");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("\nThe Jewel has been returned! Thank you for your good deeds, you have been a grat help!\n          YOU WIN\n");
+        Console.ResetColor();
         break;
     }
 }

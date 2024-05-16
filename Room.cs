@@ -15,10 +15,10 @@ namespace game
         public void ShowDoors()
         {
             StringBuilder directions = new();
-            if (North != null) directions.Append("North ");
-            if (East != null) directions.Append("East ");
-            if (South != null) directions.Append("South ");
-            if (West != null) directions.Append("West ");
+            if (North != null) directions.Append("North[n] ");
+            if (East != null) directions.Append("East[e] ");
+            if (South != null) directions.Append("South[s] ");
+            if (West != null) directions.Append("West[w] ");
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine(directions.ToString());
             Console.WriteLine();
@@ -32,7 +32,7 @@ namespace game
                 Console.ForegroundColor= ConsoleColor.DarkGray;
                 foreach (Item itemObj in Items)
                 {
-                    Console.WriteLine($"{itemObj.Name}  -  {itemObj.Description}");
+                    Console.WriteLine($"({Items.IndexOf(itemObj)}) {itemObj.Name}  -  {itemObj.Description}");
                 }
                 Console.ResetColor();
                 return true;
@@ -40,7 +40,7 @@ namespace game
             else
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("\nThis room is currently empty");
+                Console.WriteLine("This room is currently empty");
                 Console.ResetColor();
                 return false;
             }

@@ -1,5 +1,3 @@
-using System.Drawing;
-
 namespace game
 {
     public class Player(Room startRoom)
@@ -23,12 +21,27 @@ namespace game
         {
             Console.ForegroundColor= ConsoleColor.DarkGray;
             Console.WriteLine($"\nCurrent Room: {CurrentRoom.Name}\nHealth: {Health}\nDamage: +{Damage}");
-            if (CurrentRoom.Monster != null) Console.WriteLine($"Moster: {CurrentRoom.Monster.Name} - {CurrentRoom.Monster.Health} Health");
+            if (CurrentRoom.Monster != null) Console.WriteLine($"Moster: {CurrentRoom.Monster.Name} | {CurrentRoom.Monster.Health} Health | {CurrentRoom.Monster.Damage} Damage");
             Console.ResetColor();
         }
         public bool PickUpItem(string itemName)
         {
-            Item? item = CurrentRoom.Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+            Item? item;
+            if (int.TryParse(itemName, out int result))
+            {
+                if (result < 0 || result > CurrentRoom.Items.Count - 1)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("\nIndex out of range.");
+                    Console.ResetColor();
+                    return false;
+                }
+                item = CurrentRoom.Items[result];
+            }
+            else
+            {
+                item = CurrentRoom.Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+            }
             if (item != null) 
             {
                 if (item is Weapon weapon1)
@@ -60,13 +73,15 @@ namespace game
                 Items.Add(item);
                 CurrentRoom.TakeItem(item);
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"\n{item.Name} added to Inventory!\n");
+                Console.WriteLine($"\n{item.Name} added to Inventory!");
                 Console.ResetColor();
                 return true;
             }
             else
             {
-                Console.WriteLine("Item not in room.");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\nItem not in room.");
+                Console.ResetColor();
                 return false;
             }
 
@@ -81,24 +96,42 @@ namespace game
                 foreach (Item item in ItemsCopy)
                 {
                     PickUpItem(item.Name);
+                    CurrentRoom.Items.Remove(item);
                 }
                 Console.ResetColor();
-                CurrentRoom.Items = [];
             }
             else
             {
-                Console.WriteLine("Room is currently empty");
+                Console.WriteLine("\nRoom is currently empty");
             }
         }
 
         public bool DropItem(string itemName)
         {
-            Item? itemToDrop = Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+            Item? itemToDrop;
+            if (int.TryParse(itemName, out int result))
+            {
+                if (result < 0 || result > Items.Count - 1)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("\nIndex out of range.");
+                    Console.ResetColor();
+                    return false;
+                }
+                itemToDrop = Items[result];
+            }
+            else
+            {
+                itemToDrop = Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+            }
             if (itemToDrop != null)
             {
                 Items.Remove(itemToDrop);
                 CurrentRoom.AddItem(itemToDrop);
-                if (itemToDrop is Weapon) HasWeapon = false;
+                if (itemToDrop is Weapon) {
+                    HasWeapon = false;
+                    Damage = 10;
+                }
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"\n{itemToDrop.Name} removed from inventory.");
                 Console.ResetColor();
@@ -139,10 +172,10 @@ namespace game
             Console.WriteLine();
             if (Items.Count > 0)
             {
-                foreach (Item item in Items)
+                for (int i = 0; i < Items.Count; i++)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine($"{item.Name}  -  {item.Description}");
+                    Console.WriteLine($"({i}) {Items[i].Name}  -  {Items[i].Description}");
                     Console.ResetColor();
                 }
                 return true;
@@ -150,7 +183,7 @@ namespace game
             else
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Inventory is currently empty.");
+                Console.WriteLine("\nInventory is currently empty.");
                 Console.ResetColor();
                 return false;
             }
@@ -160,18 +193,18 @@ namespace game
         {
             int count = 0;
             Console.WriteLine();
-            foreach (Item item in Items)
+            for (int i = 0; i < Items.Count; i++)
             {
-                if (item is Food foodItem)
+                if (Items[i] is Food foodItem)
                 {
                     count++;
-                    Console.WriteLine($"{foodItem.Name}  -  {foodItem.Description}  -  {foodItem.HealthPoints}");
+                    Console.WriteLine($"({i}) {foodItem.Name}  -  {foodItem.Description}  -  {foodItem.Eat()}");
                 }
             }
             if (count <= 0)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("There is nothing edible in you inventory.");
+                Console.WriteLine("\nThere is nothing edible in you inventory.");
                 Console.ResetColor();
                 return false;
             }
@@ -180,14 +213,38 @@ namespace game
 
         public bool Eat(string itemName)
         {
-                Item? itemToEat = Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+                Item? itemToEat;
+                if (int.TryParse(itemName, out int result))
+                {
+                if (result < 0 || result > Items.Count - 1)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("\nIndex out of range.");
+                        Console.ResetColor();
+                        return false;
+                    }
+                    itemToEat = Items[result];
+                }
+                else
+                {
+                    itemToEat = Items.Find(item => item.Name.ToLower() == itemName?.ToLower());
+                }
                 if (itemToEat != null && itemToEat is Food foodItem)
                 {
-                    Items.Remove(itemToEat);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"\n{foodItem.HealthPoints} added to Health.");
-                    Console.ResetColor();
                     Health += foodItem.Eat();
+                    Items.Remove(itemToEat);
+                    if (foodItem.Eat() > 0)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"\n{foodItem.Eat()} added to Health.");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"\n{foodItem.Eat()} removed from Health.");
+                        Console.ResetColor();
+                    }
                     if (Health > 100) Health = 100;
                     return true;
                 }
@@ -200,27 +257,44 @@ namespace game
                 }
         }
 
-        public string Move(string direction)
+        public bool Move()
         {
-            switch (direction.ToLower())
+            Console.WriteLine("\nWhich direction? ('b' to go back)");
+            CurrentRoom.ShowDoors();
+            string? direction = Console.ReadLine();
+            switch (direction?.ToLower())
             {
                 case "north":
+                case "n":
                     if (CurrentRoom.North != null) CurrentRoom = CurrentRoom.North;
                     break;
                 case "east":
+                case "e":
                     if (CurrentRoom.East != null) CurrentRoom = CurrentRoom.East;
                     break;
                 case "south":
+                case "s":
                     if (CurrentRoom.South != null) CurrentRoom = CurrentRoom.South;
                     break;
                 case "west":
+                case "w":
                     if (CurrentRoom.West != null) CurrentRoom = CurrentRoom.West;
                     break;
+                case "b":
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"\nStayed in {CurrentRoom.Name}.");
+                    Console.ResetColor();
+                    return true;
                 default:
-                    Console.WriteLine("Invalid direction");
-                    return "move";
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("\nInvalid direction");
+                    Console.ResetColor();
+                    return false;
             }
-            return "";
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\nMoved into {CurrentRoom.Name}.");
+            Console.ResetColor();
+            return true;
         }
 
         public void Attack(Monster monster)
@@ -244,8 +318,39 @@ namespace game
             }
         }
 
-        public static void ShowMap()
+        public void ShowMap()
         {
+            if (Items.Any(item => item.Name == "Jewel"))
+            {
+                            Console.WriteLine(
+@"
+   ----------  ---------- ----------
+   |  North | |         | |  North |
+   |        |=|  North  |=|        |
+   |  West  | |         | |  East  |
+   ----------  ---------- ----------
+       ||          ||         ||
+   ----------  ---------- ----------
+   |        | |         | |        |
+   |  West  | |  Center | |  East  |
+   |        | |         | |        |
+   ----------  ---------- ----------
+       ||          ||         ||
+   ----------  ---------- ----------
+   |  South | |         | |  South |
+   |        |=|  South  |=|        |
+   |  West  | |         | |  East  |
+   ----------  ---------- ----------
+                   ||
+               ----------      
+              |         |
+              |  Start  |
+              |         |
+               ----------"
+);
+            }
+            else
+            {
             Console.WriteLine(
 @"
    ----------  ---------- ----------
@@ -272,6 +377,8 @@ namespace game
               |         |
                ----------"
 );
+            }
+
         }
     }
 }
