@@ -27,7 +27,7 @@ namespace game
         public bool PickUpItem(string itemName)
         {
             Item? item;
-            if (int.TryParse(itemName, out int result))
+            if (int.TryParse(itemName, out int result)) //CHECK IF INPUT IS NUMBER
             {
                 if (result < 0 || result > CurrentRoom.Items.Count - 1)
                 {
@@ -44,7 +44,7 @@ namespace game
             }
             if (item != null) 
             {
-                if (item is Weapon weapon1)
+                if (item is Weapon weapon1)  //DETERMINE WHAT TO DO IF ITEM IS A WEAPON
                 {
                     if (HasWeapon)
                     {
@@ -109,7 +109,7 @@ namespace game
         public bool DropItem(string itemName)
         {
             Item? itemToDrop;
-            if (int.TryParse(itemName, out int result))
+            if (int.TryParse(itemName, out int result))  //CHECK IF INPUT IS NUMBER
             {
                 if (result < 0 || result > Items.Count - 1)
                 {
@@ -128,7 +128,8 @@ namespace game
             {
                 Items.Remove(itemToDrop);
                 CurrentRoom.AddItem(itemToDrop);
-                if (itemToDrop is Weapon) {
+                if (itemToDrop is Weapon) //SET DAMAGE TO DEFAULT IF DROPPED ITEM IS A WEAPON
+                {
                     HasWeapon = false;
                     Damage = 10;
                 }
@@ -152,7 +153,11 @@ namespace game
             {
                 Items.Remove(item);
                 CurrentRoom.AddItem(item);
-                if (item is Weapon) HasWeapon = false;
+                if (item is Weapon)  //SET DAMAGE TO DEFAULT IF DROPPED ITEM IS A WEAPON
+                {
+                    HasWeapon = false;
+                    Damage = 10;
+                }
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"\n{item.Name} removed from inventory.");
                 Console.ResetColor();
@@ -214,16 +219,16 @@ namespace game
         public bool Eat(string itemName)
         {
                 Item? itemToEat;
-                if (int.TryParse(itemName, out int result))
+                if (int.TryParse(itemName, out int result))  //CHECK IF INPUT IS A NUMBER
                 {
-                if (result < 0 || result > Items.Count - 1)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("\nIndex out of range.");
-                        Console.ResetColor();
-                        return false;
-                    }
-                    itemToEat = Items[result];
+                    if (result < 0 || result > Items.Count - 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("\nIndex out of range.");
+                            Console.ResetColor();
+                            return false;
+                        }
+                        itemToEat = Items[result];
                 }
                 else
                 {
@@ -316,6 +321,16 @@ namespace game
                 Console.ResetColor();
                 Health -= monster.Damage;
             }
+        }
+
+        public bool HasJewel()
+        {
+            return Items.Any(item => item.Name == "Jewel");   
+        }
+
+        public bool HasWon()
+        {
+            return HasJewel() && CurrentRoom.Name == "Starting Room";
         }
 
         public void ShowMap()

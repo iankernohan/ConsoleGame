@@ -1,5 +1,6 @@
 ﻿using game;
 
+//CREATE ALL ITEMS AND ROOMS
 Food banana= new("Banana", "A ripe banana.", 20);
 Food poop = new("Poop", "This is poop.",  -10);
 Food bread = new("Bread", "A stale but still nutrient rich piece of Sourdough.",  15);
@@ -28,7 +29,7 @@ Room northEast = new("North East Room", [knife, poop], null, null, null, null, n
 Room northWest = new("North West Room", [knife, banana], null, null, null, null, null);
 Room center = new("Center Room", [jewel, potion], minotaur, null, null, null, null);
 
-
+//CONNECT ROOMS
 start.North = south;
 south.East = southEast;
 south.West = southWest;
@@ -49,6 +50,7 @@ north.West = northWest;
 north.South = center;
 center.North = north;
 
+//CREATE NEW PLAYER AND PLACE THEM IN STARTING ROOM
 Player player = new(start);
 string currentStatement = "";
 
@@ -63,6 +65,7 @@ Console.WriteLine("-------------------------------------------------------------
 
 while (true)
 {
+    //SHOW USER DIFFERENT OPTIONS BASED ON USER INPUT
     switch (currentStatement.ToLower())
     {
         case "":
@@ -180,6 +183,7 @@ while (true)
             break;
     }
 
+    //END GAME IF PLAYER HEALTH RUNS OUT
     if (player?.Health == 0)
     {
         Console.ForegroundColor = ConsoleColor.Red;
@@ -188,18 +192,21 @@ while (true)
         break;
     }
 
+    //REMOVE MONSTER FROM ROOM IF IT'S BEEN DEFEATED
     if (player?.CurrentRoom?.Monster?.Health <= 0) player.CurrentRoom.Monster = null;
 
-    if (player.Items.Any(item => item.Name == "Jewel"))
+    //ADD NEW DOORS IF PLAYER HAS JEWEL
+    if (player.HasJewel())
     {
         south.South = start;
         center.South = south;
     }
 
-    if (player.Items.Any(item => item.Name == "Jewel") && player.CurrentRoom.Name == "Starting Room")
+    //END GAME IF PLAYER MEETS WIN CONDITIONS
+    if (player.HasWon())
     {
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("\nThe Jewel has been returned! Thank you for your good deeds, you have been a grat help!\n          YOU WIN\n");
+        Console.WriteLine("\nThe Jewel has been returned! Thank you for your good deeds, you have been a great help!\n          YOU WIN\n");
         Console.ResetColor();
         break;
     }
