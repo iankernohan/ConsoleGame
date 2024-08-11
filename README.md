@@ -1,4 +1,4 @@
-# Weather API
+# Marikoz Console Game
 ## Description
 
             A text-based adventure game in C#, where players navigate rooms,
